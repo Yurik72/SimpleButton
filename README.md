@@ -24,6 +24,15 @@ each callback is processed with possible option
 
 - By Standard loop. You need a call .HandleLoop function and than your defined callback will be called in the same process (loop process)
 
+
+## Limits
+
+Due to the hardware limitation not all gpio's supports interrupts. Button will still work without Queue possibbilities
+In this case button state is analyzed each loop.
+This give an advantage to simplify code 
+
+You can check [here](https://www.arduino.cc/reference/en/language/functions/external-interrupts/attachinterrupt/) which pins are supported by interrupts
+
 ## Usage
 first declare a button
 CSimpleButton btn;
