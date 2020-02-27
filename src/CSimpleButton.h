@@ -54,6 +54,9 @@ QueueHandle_t  messsage_queue  ;
 	SemaphoreHandle_t xSemaphore;
 #else
   CSimpleArray<button_queue_item_t> m_queue;
+  bool useInterrupt;
 #endif 
 	bool isUseLoop;
+	void InterruptTick();
+	bool state;
 };

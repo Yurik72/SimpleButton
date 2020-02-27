@@ -25,6 +25,8 @@ void CSimpleButton::Create(uint8_t gpio, button_callback_fn cb, bool press_val, 
 	uint32_t now = xTaskGetTickCountFromISR();
 #else
   uint32_t now =millis();
+  useInterrupt = true;
+  state = !press_val;
 #endif
 	pressed_value = press_val;
  #if defined(ESP32) || defined(ESP8266) 
@@ -38,13 +40,25 @@ void CSimpleButton::Create(uint8_t gpio, button_callback_fn cb, bool press_val, 
 	gpio_num= gpio;
 
 	INFO("Creating button on gpio %d", gpio);
+	Serial.println(gpio);
 	pinMode(gpio, INPUT_PULLUP);
 
   #if defined(ESP32) || defined(ESP8266) 
 	attachInterruptArg(gpio_num, CSimpleButton::interruptInternal,(void*)this, CHANGE);
  #else 
+	
+	//attachInterrupt(digitalPinToInterrupt(gpio_num), CSimpleButton::interruptInternal_noarg, CHANGE);
+	int interrupt_num = digitalPinToInterrupt(gpio_num);
+	if (interrupt_num >= 0) {
+		attachInterrupt_ex(interrupt_num, CSimpleButton::interruptInternal, (void*)this, CHANGE);
+		INFO("Button attached to interrupt %d, normal queue possible", interrupt_num);
+	}
+	else {
+		useInterrupt = false;
+		pinMode(gpio_num, INPUT);
+		INFO("Button IS NOT  attached to interrupt , using loop to handle num(%d)", interrupt_num);
+	}
 
-	attachInterrupt_ex(digitalPinToInterrupt(gpio_num), CSimpleButton::interruptInternal,(void*)this,  CHANGE);
 #endif
  #if defined(ESP32) || defined(ESP8266) 
 	messsage_queue = xQueueCreate(BTN_QUEUE_SIZE, sizeof(button_queue_item_t));
@@ -52,7 +66,7 @@ void CSimpleButton::Create(uint8_t gpio, button_callback_fn cb, bool press_val, 
  #endif
 }
 void  CSimpleButton::Interrupt() {
-	DEBUG("Button interrupt %d", gpio_num);
+	//DEBUG("Button interrupt %d", gpio_num);
 	button_queue_item_t cmd;
 #if defined(ESP32) || defined(ESP8266)  
 	while (xQueueReceive(messsage_queue, &cmd, 0)) {
@@ -94,10 +108,14 @@ void  CSimpleButton::Interrupt() {
  #endif
 }
 void CSimpleButton::HandleLoop() {
+#if !defined(ESP32) && !defined(ESP8266)
+	if (!useInterrupt)
+		InterruptTick();
+#endif
 	Interrupt();
 }
 void  IRAM_ATTR CSimpleButton::interruptInternal_noarg() {
-	DEBUG("interruptInternal_noarg");
+	Serial.println("interruptInternal_noarg");
 	return;
 	
 }
@@ -106,7 +124,23 @@ void   CSimpleButton::interruptInternal_noISR(void* arg) {
 	CSimpleButton*p = static_cast<CSimpleButton*>(arg);
 	p->Interrupt();
 }
+
+#if !defined(ESP32) && !defined(ESP8266)
+void CSimpleButton::InterruptTick() {
+	bool newstate = digitalRead(gpio_num);
+	
+	if (newstate == state)
+		return;
+	//INFO("State %d", newstate);
+	state = newstate;
+	button_queue_item_t cmd;
+	cmd.ispress = newstate;
+	cmd.time = millis();
+	m_queue.Add(cmd);
+}
+#endif
 void  IRAM_ATTR CSimpleButton::interruptInternal(void* arg) {
+	DEBUG("interruptInternal");
 	CSimpleButton*p = static_cast<CSimpleButton*>(arg);
 
 	button_queue_item_t cmd;

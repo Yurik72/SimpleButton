@@ -7,7 +7,8 @@ Serial.println("Button callback");
 }
 void setup() {
   // put your setup code here, to run once:
-btn.Create(4, button_callback,true);
+Serial.begin(115200);
+btn.Create(D2, button_callback,true);  //works for instance on Arduino nano with interrrupts
 }
 
 void loop() {
