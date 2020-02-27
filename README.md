@@ -3,45 +3,54 @@
 
 
 
-ESPHap
+Simple Button
 ===========
 
-This is a library for easily & efficiently integrating arduino projects based on Esp32 with Apple Home Kit by  native protocols 
-and without any additional bridges
+This is a library for easily button usage
 
-!At this moment only ESP32 supported
-
-Many thanks to [maximkulkin](https://github.com/maximkulkin) for providing fine libraries for native integration,
-this project uses this as well.
-
-## Build instruction
-
-This library should be located under standart Arduino libraries folder. 
-Library is depends from [wolfssl](https://github.com/wolfSSL)  , but it requires some preparation before usage,
-full instruction how to do that, can be found [there](https://www.wolfssl.com/doxygen/md__Users_alexabrahamson_Work_wolfssl-CLEAN_IDE_ARDUINO_README.html)
-
-if you are doing this manually you should made specific configuration before usage.
-For simplify process you can use [wolfssl.rar](https://github.com/Yurik72/ESPHap/blob/master/wolfssl/wolfSSL.rar) archive , which already prepared. You just need to extract this content  into Arduino Libraries folder
-
-If you are going to prepare this manually, please reuse/check settings.h and user_settings.h  from attached archive or
- [this location](https://github.com/Yurik72/ESPHap/tree/master/wolfssl)
- You need copy/replace this files in wolfssl components.
-
-## Getting help
+Supports natvelly ESP32 and and Arduino processors
 
 
+## Benefits
+
+Library supports multi touch functionality with internal queue stack. For instance you fast pressed double, even triple times. But want to execute quite long code, for instance push some data to the internet cloud. All presses will be stored and and callback will be execute seqentially one by one. Definetelly those calls will be out of ISR
+Supports two modes: Short press and Long Press
+
+## Tricks
+
+Button library is implementd by attaching hardware interrupts and each event is stored in queue immediatelly, than 
+each callback is processed with possible option
+- By timer (supports only ESP32), means on timer function (out of ISR) callback will be called. this is simplify a process
+
+- By Standard loop. You need a call .HandleLoop function and than your defined callback will be called in the same process (loop process)
+
+## Usage
+first declare a button
+CSimpleButton btn;
+
+in setup  call
+
+btn.Create(gpionum, callback,pressed);
+where :
+gpionum   - gpio number
+callback  - callback function
+pressed   - bool , defines initial state. For instance for button that wired to gnd during the press should be false. For touch button when is raised signal during touch should be true
+
+
+ 
 ## Simple example
 
-examples folder contains simple example EspHapLed how to handle led (or any such as relay) 
-More examples will be later, hovewer you can see the same examples/implemenmtation
-[esphapcontroller](https://github.com/Yurik72/esphapcontroller)
 
-This example used as well implemenation for pairing storage. it will be stored in spiffs system with file name pair.dat
+CSimpleButton btn;   //declare button
 
-In the ino file change your wifi name and password. After connecting to wifi device should be accesible for pairing from Apple home.
-At this moment QR is not generated, so please use manual pairing by enetering password  11111111
+void button_callback(uint8_t gpio, button_event_t event) {
+Serial.println("Button callback");
+}
+void setup() {
+  // put your setup code here, to run once:
+btn.Create(4, button_callback,true);  //create button  attache to gpio 4 and with normal low value
+}
 
-More detail instruction can be found [there](https://www.instructables.com/id/Arduino-With-ESP32-and-Native-Apple-HomeKit-Integr/)
 
 ## For more information
 
