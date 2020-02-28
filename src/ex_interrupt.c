@@ -139,7 +139,7 @@ void attachInterrupt_ex(uint8_t interruptNum, interrupt_callback_witharg_fn fn, 
 static volatile void* intPORTBFunc_args__ex[PORTB_PINS] = { 0 };
 static volatile interrupt_callback_witharg_fn intPORTBFunc_witharg_ex[PORTB_PINS] = { 0 };
 volatile uint8_t portbhistory = 0xFF;
-#include<Arduino.h>
+
 ISR(PCINT0_vect)
 {
 	
@@ -157,10 +157,10 @@ ISR(PCINT0_vect)
 }
 void attachInterrupt_ex_portb(uint8_t gpionum, interrupt_callback_witharg_fn fn, void * arg, int mode)
 {
-	printf("attach portb");
+	
 	if ((gpionum < 8) || (gpionum >15))
 		return;
-	printf("attaching  portb");
+
 	uint8_t bnum = gpionum - 8;
 	// DDRB  will not setup suppose that base handler will do pinMode
 	// PORTB  will not setup
