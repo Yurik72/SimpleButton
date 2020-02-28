@@ -135,6 +135,7 @@ void attachInterrupt_ex(uint8_t interruptNum, interrupt_callback_witharg_fn fn, 
     intFunc_args__ex[interruptNum]=arg;
     intFunc_witharg_ex[interruptNum]=fn;
 }
+#ifndef BUTTON_DISABLE_PORT_B
 //PORTB   digital pins 8 - 15 implementation
 static volatile void* intPORTBFunc_args__ex[PORTB_PINS] = { 0 };
 static volatile interrupt_callback_witharg_fn intPORTBFunc_witharg_ex[PORTB_PINS] = { 0 };
@@ -177,6 +178,50 @@ void attachInterrupt_ex_portb(uint8_t gpionum, interrupt_callback_witharg_fn fn,
 	portbhistory = PINB;
 
 }
+#endif
 
+#ifndef BUTTON_DISABLE_PORT_D
+//PORTB   digital pins 8 - 15 implementation
+static volatile void* intPORTDFunc_args__ex[PORTD_PINS] = { 0 };
+static volatile interrupt_callback_witharg_fn intPORTDFunc_witharg_ex[PORTD_PINS] = { 0 };
+volatile uint8_t portdhistory = 0xFF;
+
+ISR(PCINT2_vect)
+{
+
+
+	uint8_t changedbits;
+	changedbits = PIND ^ portdhistory;
+	portdhistory = PIND;
+	for (uint8_t i = 0; i < PORTB_PINS; i++) {
+		if (intPORTDFunc_witharg_ex[i]) {
+			if (GPIO_PORTB_CHANGED(changedbits, i + 8)) {
+				intPORTDFunc_witharg_ex[i](intPORTDFunc_args__ex[i]);
+			}
+		}
+	}
+}
+void attachInterrupt_ex_portd(uint8_t gpionum, interrupt_callback_witharg_fn fn, void * arg, int mode)
+{
+
+	if (gpionum > 7)
+		return;
+
+	// DDRD  will not setup suppose that base handler will do pinMode
+	// PORTD  will not setup
+
+
+
+	PCICR |= (1 << PCIE2);  // Turn on port D for interrupts
+	PCMSK2 |= (1 << (PD0 + gpionum));      //Set mask to hanle interrupt on pin
+
+	sei();
+
+	intPORTDFunc_args__ex[gpionum] = arg;
+	intPORTDFunc_witharg_ex[gpionum] = fn;
+	portdhistory = PIND;
+
+}
+#endif
 
 #endif

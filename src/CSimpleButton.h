@@ -1,5 +1,5 @@
 #pragma once
-
+#include "button_config.h"
 #include "Arduino.h"
  #if !defined(ESP32) &&  !defined(ESP8266) 
 #include "ex_interrupt.h"

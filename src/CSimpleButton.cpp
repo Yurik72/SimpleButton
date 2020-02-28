@@ -53,10 +53,12 @@ void CSimpleButton::Create(uint8_t gpio, button_callback_fn cb, bool press_val, 
 		attachInterrupt_ex(interrupt_num, CSimpleButton::interruptInternal, (void*)this, CHANGE);
 		INFO("Button attached to interrupt %d, normal queue possible", interrupt_num);
 	}
+#ifndef BUTTON_DISABLE_PORT_B
 	else if (gpio_num >= 8 && gpio_num <= 15) {
 		INFO("Button attached to PORTB interrupts %d", gpio_num);
 		attachInterrupt_ex_portb(gpio_num,CSimpleButton::interruptInternal, (void*)this, CHANGE);
 	}
+#endif
 	else {
 		useInterrupt = false;
 		pinMode(gpio_num, INPUT);
