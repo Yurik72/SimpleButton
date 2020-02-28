@@ -42,7 +42,7 @@ void CSimpleButton::Create(uint8_t gpio, button_callback_fn cb, bool press_val, 
 	INFO("Creating button on gpio %d", gpio);
 	Serial.println(gpio);
 	pinMode(gpio, INPUT_PULLUP);
-
+	digitalWrite(gpio, press_val ? LOW : HIGH);
   #if defined(ESP32) || defined(ESP8266) 
 	attachInterruptArg(gpio_num, CSimpleButton::interruptInternal,(void*)this, CHANGE);
  #else 
@@ -52,6 +52,10 @@ void CSimpleButton::Create(uint8_t gpio, button_callback_fn cb, bool press_val, 
 	if (interrupt_num >= 0) {
 		attachInterrupt_ex(interrupt_num, CSimpleButton::interruptInternal, (void*)this, CHANGE);
 		INFO("Button attached to interrupt %d, normal queue possible", interrupt_num);
+	}
+	else if (gpio_num >= 8 && gpio_num <= 15) {
+		INFO("Button attached to PORTB interrupts %d", gpio_num);
+		attachInterrupt_ex_portb(gpio_num,CSimpleButton::interruptInternal, (void*)this, CHANGE);
 	}
 	else {
 		useInterrupt = false;
@@ -140,11 +144,12 @@ void CSimpleButton::InterruptTick() {
 }
 #endif
 void  IRAM_ATTR CSimpleButton::interruptInternal(void* arg) {
-	DEBUG("interruptInternal");
+	//INFO("interruptInternal %d",arg);
 	CSimpleButton*p = static_cast<CSimpleButton*>(arg);
 
 	button_queue_item_t cmd;
 	cmd.ispress = digitalRead(p->gpio_num);
+	//INFO("interruptInternal %d", cmd.ispress);
  #if defined(ESP32) || defined(ESP8266)  
 	cmd.time = xTaskGetTickCountFromISR();
   #else
