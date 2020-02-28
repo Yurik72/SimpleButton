@@ -33,6 +33,9 @@ This give an advantage to simplify code
 
 You can check [here](https://www.arduino.cc/reference/en/language/functions/external-interrupts/attachinterrupt/) which pins are supported by interrupts
 
+There are some feathures as well availbale to handle interrupts on ATMega328 platform  on PORTB which are pins D8-D15
+When is standard Arduino libs interrupt not available and gpio is between 8 and 15, custom ISR implemented
+
 ## Usage
 first declare a button
 CSimpleButton btn;
